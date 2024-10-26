@@ -4,6 +4,8 @@ Changes to Calva.
 
 ## [Unreleased]
 
+- [Add extension when contexts for Calva states such as project root, session type, ns](https://github.com/BetterThanTomorrow/calva/issues/2652)
+
 ## [2.0.480] - 2024-10-21
 
 - Fix: [Custom command snippets use the wrong ns when repl sessions types do not match](https://github.com/BetterThanTomorrow/calva/issues/2653)
