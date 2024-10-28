@@ -228,6 +228,20 @@ describe('Token Cursor', () => {
       cursor.backwardSexp(true, true);
       expect(cursor.offsetStart).toBe(b.selections[0].anchor);
     });
+    it('Does not skip ignored forms if skipIgnoredForms', () => {
+      const a = docFromTextNotation('(a #_1 #_2 |3)');
+      const b = docFromTextNotation('(a #_a #_|2 3)');
+      const cursor = a.getTokenCursor(a.selections[0].anchor);
+      cursor.backwardSexp(true, true);
+      expect(cursor.offsetStart).toBe(b.selections[0].anchor);
+    });
+    it('Does not skip stacked ignored forms', () => {
+      const a = docFromTextNotation('(a #_ #_ 1 2 |3)');
+      const b = docFromTextNotation('(a #_ #_ 1 |2 3)');
+      const cursor = a.getTokenCursor(a.selections[0].anchor);
+      cursor.backwardSexp(true, true);
+      expect(cursor.offsetStart).toBe(b.selections[0].anchor);
+    });
   });
 
   describe('downList', () => {
