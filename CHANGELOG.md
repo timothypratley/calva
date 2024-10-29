@@ -7,6 +7,7 @@ Changes to Calva.
 - [Add extension when contexts for Calva states such as project root, session type, ns](https://github.com/BetterThanTomorrow/calva/issues/2652)
 - Fix: [Calva internals: The `backwardSexp` function can't handle skipping ignored forms, even though it says it can](https://github.com/BetterThanTomorrow/calva/issues/2657)
 - Fix: [Keep support for evaluating top level form in ignored forms when at top level](https://github.com/BetterThanTomorrow/calva/issues/2655)
+- [Enable separate styling for top level ignored forms](https://github.com/BetterThanTomorrow/calva/issues/2660)
 
 ## [2.0.480] - 2024-10-21
 
