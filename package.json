@@ -1142,6 +1142,12 @@
             "default": null,
             "description": "Style of `#_` ignored forms",
             "scope": "resource"
+          },
+          "calva.highlight.ignoredTopLevelFormStyle": {
+            "type": "object",
+            "default": null,
+            "markdownDescription": "Style of top level `#_` ignored forms. If not specified, it will be the same as what's set for `calva.highlight.ignoredFormStyle`",
+            "scope": "resource"
           }
         }
       }
