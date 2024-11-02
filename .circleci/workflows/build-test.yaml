@@ -1,44 +1,30 @@
+!yamlscript/v0/
+
+requires-checkout =::
+  requires:
+  - checkout
+
+requires-build =::
+  requires:
+  - build
+
+
 jobs:
 - checkout:
     filters:
       tags:
         ignore: /^v\d+\.\d+\.\d+-?.*/
 
-- prettier-check:
-    requires:
-    - checkout
+- prettier-check:: requires-checkout
+- test-grammar::   requires-checkout
+- build::          requires-checkout
 
-- test-grammar:
-    requires:
-    - checkout
-
-- build:
-    requires:
-    - checkout
-
-- eslint-check:
-    requires:
-    - build
-
-- test-cljslib:
-    requires:
-    - build
-
-- test-integration:
-    requires:
-    - build
-
-- test-e2e:
-    requires:
-    - build
-
-- test-e2e-sub-projects:
-    requires:
-    - build
-
-- test-ts-unit:
-    requires:
-    - build
+- eslint-check::          requires-build
+- test-cljslib::          requires-build
+- test-integration::      requires-build
+- test-e2e::              requires-build
+- test-e2e-sub-projects:: requires-build
+- test-ts-unit::          requires-build
 
 - marketplace-preview-publish:
     requires:
