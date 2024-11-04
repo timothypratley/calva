@@ -1,59 +1,55 @@
 !yamlscript/v0/
 
-# Define 2 default mappings for clean reuse:
-default-filters =::
-  branches:
-    ignore: /.*/
-  tags:
-    only: /^v\d+\.\d+\.\d+-?.*/
-
-# XXX This might not be required to differ from default-filters
-default-filters-2 =::
-  branches:
-    ignore: /.*/
-  tags:
-    only: /^v\d+\.\d+\.\d+$/
-
+::
+  defn filters(type='prerelease')::
+    branches:
+      ignore: /.*/
+    tags:
+      only::
+        case type:
+          'prerelease': '/^v\d+\.\d+\.\d+-?.*/'
+          'release':    '/^v\d+\.\d+\.\d+$/'
+          else: die("Unexpected filter type '$type'")
 
 jobs:
 - checkout:
-    filters:: default-filters
+    filters:: filters()
 
 - build:
     requires: [checkout]
-    filters:: default-filters
+    filters:: filters()
 
 - prettier-check:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - eslint-check:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-grammar:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-cljslib:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-integration:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-e2e:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-e2e-sub-projects:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - test-ts-unit:
     requires: [build]
-    filters:: default-filters
+    filters:: filters()
 
 - github-release:
     requires:
@@ -65,25 +61,25 @@ jobs:
     - test-e2e
     - test-e2e-sub-projects
     - test-ts-unit
-    filters:: default-filters
+    filters:: filters()
     context: Calva
 
 - marketplace-publish:
     requires: [github-release]
-    filters:: default-filters-2
+    filters:: filters('release')
     context: Calva
 
 - open-vsx-publish:
     requires: [github-release]
-    filters:: default-filters-2
+    filters:: filters('release')
     context: Calva
 
 - merge-dev-into-published:
     requires: [marketplace-publish]
-    filters:: default-filters-2
+    filters:: filters('release')
     context: Calva
 
 - bump-dev-version:
     requires: [merge-dev-into-published]
-    filters:: default-filters-2
+    filters:: filters('release')
     context: Calva
