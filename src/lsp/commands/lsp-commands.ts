@@ -190,6 +190,8 @@ export function registerLspCommands(clients: defs.LspClientStore) {
     { command: 'move-coll-entry-up', category: 'clojureLsp.refactor' },
     { command: 'move-form', category: 'clojureLsp.refactor' },
     { command: 'promote-fn', category: 'clojureLsp.refactor' },
+    { command: 'replace-refer-all-with-alias', category: 'clojureLsp.refactor' },
+    { command: 'replace-refer-all-with-refer', category: 'clojureLsp.refactor' },
     { command: 'resolve-macro-as', category: 'clojureLsp.refactor' },
     { command: 'restructure-keys', category: 'clojureLsp.refactor' },
     { command: 'sort-clauses', category: 'clojureLsp.refactor' },
