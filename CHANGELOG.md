@@ -3,7 +3,7 @@
 Changes to Calva.
 
 ## [Unreleased]
-
+- Fix: [Added 'replace-refer-all-with-alias' & 'replace-refer-all-with-refer' actions to calva.](https://github.com/BetterThanTomorrow/calva/issues/2667) 
 - Fix: [Error responses wait for stacktrace before printing to repl output](https://github.com/BetterThanTomorrow/calva/issues/2355)
 
 ## [2.0.399] - 2023-11-20
