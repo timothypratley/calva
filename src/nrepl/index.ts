@@ -3,16 +3,23 @@ import { BEncoderStream, BDecoderStream } from './bencode';
 import * as cider from './cider';
 import * as state from './../state';
 import * as util from '../utilities';
-import { PrettyPrintingOptions, disabledPrettyPrinter, getServerSidePrinter } from '../printer';
+import {
+  PrettyPrintingOptions,
+  disabledPrettyPrinter,
+  getServerSidePrinter,
+  prettyPrint,
+} from '../printer';
 import * as debug from '../debugger/calva-debug';
 import * as vscode from 'vscode';
 import debugDecorations from '../debugger/decorations';
-import * as outputWindow from '../results-output/results-doc';
+import * as outputWindow from '../repl-window/repl-doc';
 import { formatAsLineComments } from '../results-output/util';
 import type { ReplSessionType } from '../config';
-import { getStateValue, prettyPrint } from '../../out/cljs-lib/cljs-lib';
+import { getStateValue } from '../../out/cljs-lib/cljs-lib';
 import { getConfig } from '../config';
 import { log, Direction } from './logging';
+import * as string from '../util/string';
+import * as output from '../results-output/output';
 
 function hasStatus(res: any, status: string): boolean {
   return res.status && res.status.indexOf(status) > -1;
@@ -288,12 +295,9 @@ export class NReplSession {
 
     if ((msgData.out || msgData.err) && this.replType) {
       if (msgData.out) {
-        outputWindow.append(msgData.out);
+        output.appendOtherOut(msgData.out);
       } else if (msgData.err) {
-        const err = formatAsLineComments(msgData.err);
-        outputWindow.appendLine(err, (_) => {
-          outputWindow.appendPrompt();
-        });
+        output.appendOtherErr(msgData.err);
       }
     }
   }
@@ -380,29 +384,20 @@ export class NReplSession {
     }
   }
 
-  async requireREPLUtilities() {
-    const CLJS_FORM = `(try
-                         (require '[cljs.repl :refer [apropos dir doc find-doc print-doc pst source]])
-                         (catch :default e
-                           (js/console.warn "Failed to require cljs.repl utilities:" (.-message e))))`;
+  async requireREPLUtilities(ns: string) {
+    const CLJS_FORM = `(require '[cljs.repl :refer [apropos dir doc find-doc print-doc pst source]])`;
     const CLJ_FORM = `(when-let [requires (resolve 'clojure.main/repl-requires)]
                         (clojure.core/apply clojure.core/require @requires))`;
-    await this.eval(this.replType === 'clj' ? CLJ_FORM : CLJS_FORM, this.client.ns).value;
+    await this.eval(this.replType === 'clj' ? CLJ_FORM : CLJS_FORM, ns).value;
   }
 
   private _createEvalOperationMessage(code: string, ns: string, opts: any) {
     const debugResponse = getStateValue(debug.DEBUG_RESPONSE_KEY);
+    const theNS = ns || opts['ns'] || 'user';
     if (debugResponse && vscode.debug.activeDebugSession && this.replType === 'clj') {
-      state
-        .analytics()
-        .logEvent(
-          debug.DEBUG_ANALYTICS.CATEGORY,
-          debug.DEBUG_ANALYTICS.EVENT_ACTIONS.EVALUATE_IN_DEBUG_CONTEXT
-        )
-        .send();
       return {
         id: debugResponse.id,
-        ns,
+        ns: theNS,
         session: this.sessionId,
         op: 'debug-input',
         input: `{:response :eval, :code ${code}}`,
@@ -413,7 +408,7 @@ export class NReplSession {
       return {
         id: this.client.nextId,
         op: 'eval',
-        ns,
+        ns: theNS,
         session: this.sessionId,
         code,
         ...opts,
@@ -421,6 +416,16 @@ export class NReplSession {
     }
   }
 
+  /**
+   * Evaluates the given code in the specified `ns`.
+   * If `ns` is not specified, will use the `ns` from `opts`.
+   * If `opts.ns` is not specified, will use `user`.
+   *
+   * @param code - The code to evaluate.
+   * @param ns - The namespace in which to evaluate the code.
+   * @param opts - Optional evaluation options. See https://nrepl.org/nrepl/ops.html#eval
+   * @returns An `NReplEvaluation` object Promise representing the evaluation.
+   */
   eval(
     code: string,
     ns: string,
@@ -439,9 +444,10 @@ export class NReplSession {
     opts['pprint'] = pprintOptions.enabled;
     delete opts.pprintOptions;
     const extraOpts = getServerSidePrinter(pprintOptions);
+    const { stdout, stderr, stdin, ...cleanedOpts } = opts;
     const opMsg = this._createEvalOperationMessage(code, ns, {
       ...extraOpts,
-      ...opts,
+      ...cleanedOpts,
     });
 
     const evaluation = new NReplEvaluation(
@@ -526,16 +532,17 @@ export class NReplSession {
     opts['pprint'] = pprintOptions.enabled;
     delete opts.pprintOptions;
     const extraOpts = getServerSidePrinter(pprintOptions);
+    const { stderr, stdout, ...optsLessOut } = opts;
     const evaluation = new NReplEvaluation(
       id,
       this,
-      opts.stderr,
-      opts.stdout,
+      stderr,
+      stdout,
       null,
       new Promise((resolve, reject) => {
         const msg = {
           ...extraOpts,
-          ...opts,
+          ...optsLessOut,
           op: 'load-file',
           session: this.sessionId,
           file,
@@ -648,7 +655,7 @@ export class NReplSession {
       'ns-query': {
         exactly: [ns],
       },
-      search: util.escapeStringRegexp(test),
+      search: string.escapeStringRegexp(test),
       'test?': true,
     });
   }
@@ -761,7 +768,7 @@ export class NReplSession {
     });
   }
 
-  private _refresh(cmd, opts: { dirs?: string[]; before?: string[]; after?: string[] } = {}) {
+  private _refresh(cmd, opts = {}) {
     return new Promise<any>((resolve, reject) => {
       const id = this.client.nextId;
       const msg = {
@@ -791,6 +798,9 @@ export class NReplSession {
           if (msg.err) {
             err += msg.err;
           }
+          if (msg.out) {
+            output.appendOtherOut(msg.out);
+          }
           if (hasStatus(msg, 'done')) {
             const res = { reloaded, status } as any;
             if (error) {
@@ -814,11 +824,11 @@ export class NReplSession {
     });
   }
 
-  refresh(opts: { dirs?: string[]; before?: string[]; after?: string[] } = {}) {
+  refresh(opts = {}) {
     return this._refresh('refresh', opts);
   }
 
-  refreshAll(opts: { dirs?: string[]; before?: string[]; after?: string[] } = {}) {
+  refreshAll(opts = {}) {
     return this._refresh('refresh-all', opts);
   }
 

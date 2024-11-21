@@ -71,9 +71,13 @@ toplevel.terminal(
 // (#[^\(\)\[\]\{\}"_@~\s,]+[\s,]*)*
 
 // open parens
-toplevel.terminal('open', /((?<=(^|[()[\]{}\s,]))['`~#@?^]\s*)*['`~#@?^]*[([{"]/, (l, m) => ({
-  type: 'open',
-}));
+toplevel.terminal(
+  'open',
+  /((?<=(^|[()[\]{}\s,]))['`~@?^]\s*)*(['`~#@?^]*[({"]|['`~@?^]*[[])/,
+  (l, m) => ({
+    type: 'open',
+  })
+);
 
 // close parens
 toplevel.terminal('close', /\)|\]|\}/, (l, m) => ({ type: 'close' }));
@@ -121,7 +125,7 @@ toplevel.terminal('kw', /(['`~^]\s*)*(:[^()[\]{},~@`^"\s;]*)/, (l, m) => ({
 }));
 
 // data readers
-toplevel.terminal('reader', /#[^()[\]{}'"_@~\s,;\\]+/, (_l, _m) => ({
+toplevel.terminal('reader', /#[^()[\]{}'"_@~\s,;\\][^()[\]{}'"@~\s,;\\]*/, (_l, _m) => ({
   type: 'reader',
 }));
 

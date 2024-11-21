@@ -3,6 +3,9 @@ import { deepEqual } from './util/object';
 import * as docMirror from './doc-mirror';
 import * as context from './cursor-doc/cursor-context';
 import * as util from './utilities';
+import * as namespace from './namespace';
+import * as session from './nrepl/repl-session';
+import { cljsLib } from './utilities';
 
 export let lastContexts: context.CursorContext[] = [];
 export let currentContexts: context.CursorContext[] = [];
@@ -16,8 +19,12 @@ export function setCursorContextIfChanged(editor: vscode.TextEditor) {
   ) {
     return;
   }
-  const contexts = determineCursorContexts(editor.document, editor.selection.active);
+  const contexts = determineCursorContexts(editor.document, editor.selections[0].active);
   setCursorContexts(contexts);
+  const [ns, _form] = namespace.getDocumentNamespace(editor.document);
+  void vscode.commands.executeCommand('setContext', 'calva:ns', ns);
+  const sessionType = session.getReplSessionType(cljsLib.getStateValue('connected'));
+  void vscode.commands.executeCommand('setContext', 'calva:replSessionType', sessionType);
 }
 
 function determineCursorContexts(

@@ -3,9 +3,10 @@ import * as path from 'path';
 import * as state from '../state';
 import * as utilities from '../utilities';
 import { Config, getConfig } from '../config';
-import * as outputWindow from '../results-output/results-doc';
+import * as outputWindow from '../repl-window/repl-doc';
 import { formatAsLineComments } from '../results-output/util';
 import { ConnectType } from './connect-types';
+import * as output from '../results-output/output';
 
 enum ProjectTypes {
   'Leiningen' = 'Leiningen',
@@ -15,6 +16,7 @@ enum ProjectTypes {
   'Gradle' = 'Gradle',
   'babashka' = 'babashka',
   'nbb' = 'nbb',
+  'basilisp' = 'basilisp',
   'joyride' = 'joyride',
   'generic' = 'generic',
   'custom' = 'custom',
@@ -65,6 +67,7 @@ interface ReplConnectSequence {
   cljsType: CljsTypes | CljsTypeConfig;
   menuSelections?: MenuSelections;
   nReplPortFile?: string[];
+  extraNReplMiddleware?: string[];
   jackInEnv?: Record<string, string>;
 }
 
@@ -225,6 +228,15 @@ const joyrideDefaults: ReplConnectSequence[] = [
   },
 ];
 
+const basilispDefaults: ReplConnectSequence[] = [
+  {
+    name: 'basilisp',
+    projectType: ProjectTypes['basilisp'],
+    cljsType: CljsTypes.none,
+    nReplPortFile: ['.nrepl-port'],
+  },
+];
+
 const defaultSequences = {
   lein: leiningenDefaults,
   clj: cljDefaults,
@@ -235,6 +247,7 @@ const defaultSequences = {
   custom: customDefaults,
   babashka: babashkaDefaults,
   nbb: nbbDefaults,
+  basilisp: basilispDefaults,
   joyride: joyrideDefaults,
   'cljs-only': cljsOnlyDefaults,
 };
@@ -305,14 +318,12 @@ const defaultCljsTypes: { [id: string]: CljsTypeConfig } = {
 const connectSequencesDocLink = `  - See https://calva.io/connect-sequences/`;
 
 const defaultProjectSettingMsg = (project: string) =>
-  formatAsLineComments(
-    [
-      `Connecting using "${project}" project type.`,
-      `You can make Calva auto-select this.`,
-      connectSequencesDocLink,
-      '\n',
-    ].join('\n')
-  );
+  [
+    `Connecting using "${project}" project type.`,
+    `You can make Calva auto-select this.`,
+    connectSequencesDocLink,
+    '\n',
+  ].join('\n');
 
 /** Retrieve the replConnectSequences from the config */
 function getCustomConnectSequences(): ReplConnectSequence[] {
@@ -353,7 +364,7 @@ function getConnectSequences(projectTypes: string[]): ReplConnectSequence[] {
 }
 
 function informAboutDefaultProjectForJackIn(project: string) {
-  outputWindow.appendLine(defaultProjectSettingMsg(project));
+  output.appendLineOtherOut(defaultProjectSettingMsg(project));
 }
 
 /**
@@ -384,28 +395,20 @@ function getUserSpecifiedSequence(
     );
 
     if (defaultSequence) {
-      outputWindow.appendLine(
-        formatAsLineComments(
-          [
-            `Auto-selecting project type "${defaultSequence.name}".`,
-            `You can change this from settings:`,
-            connectSequencesDocLink,
-            '\n',
-          ].join('\n')
-        )
+      output.appendLineOtherOut(
+        [
+          `Auto-selecting project type "${defaultSequence.name}".`,
+          `You can change this from settings:`,
+          connectSequencesDocLink,
+          '\n',
+        ].join('\n')
       );
 
       return defaultSequence;
     } else {
-      outputWindow.appendLine(
-        formatAsLineComments(
-          [
-            `Project type "${userSpecifiedProjectType}" not found.`,
-            `You need to update the auto-select setting.`,
-            connectSequencesDocLink,
-            '\n',
-          ].join('\n')
-        )
+      output.appendLineOtherErr(`Project type "${userSpecifiedProjectType}" not found.`);
+      output.appendLineOtherOut(
+        [`You need to update the auto-select setting.`, connectSequencesDocLink, '\n'].join('\n')
       );
     }
   }
@@ -427,9 +430,10 @@ async function askForConnectSequence(
 
   const defaultSequence = getUserSpecifiedSequence(sequences, connectType, disableAutoSelect);
 
-  const projectConnectSequenceName =
-    defaultSequence?.name ??
-    (await utilities.quickPickSingle({
+  let projectConnectSequenceName = defaultSequence?.name;
+
+  if (!projectConnectSequenceName) {
+    const pickedSequence = await utilities.quickPickSingle({
       title: `${menuTitleType}: Project Type/Connect Sequence`,
       values: sequences
         .filter((s) => !(s.projectType === 'custom' && !s.customJackInCommandLine))
@@ -438,12 +442,16 @@ async function askForConnectSequence(
       placeHolder: 'Please select a project type',
       saveAs: saveAsPath,
       autoSelect: true,
-    }));
+    });
 
-  !defaultSequence && void informAboutDefaultProjectForJackIn(projectConnectSequenceName);
+    projectConnectSequenceName = pickedSequence.label;
+
+    if (projectConnectSequenceName) {
+      informAboutDefaultProjectForJackIn(projectConnectSequenceName);
+    }
+  }
 
   if (!projectConnectSequenceName || projectConnectSequenceName.length <= 0) {
-    state.analytics().logEvent('REPL', logLabel, 'NoProjectTypePicked').send();
     return;
   }
   const sequence = sequences.find((seq) => seq.name === projectConnectSequenceName);

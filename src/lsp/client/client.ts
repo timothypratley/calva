@@ -1,7 +1,7 @@
 import * as messages from './messages';
 import { provideSignatureHelp } from '../../providers/signature';
 import { provideHover } from '../../providers/hover';
-import { isResultsDoc } from '../../results-output/results-doc';
+import { isResultsDoc } from '../../repl-window/repl-doc';
 import * as vscode_lsp from 'vscode-languageclient/node';
 import * as defs from '../definitions';
 import * as config from '../../config';
@@ -150,7 +150,6 @@ export const createClient = (params: CreateClientParams): defs.LspClient => {
         'auto-add-ns-to-new-files?': true,
         'document-formatting?': false,
         'document-range-formatting?': false,
-        'keep-require-at-start?': true,
       },
       middleware: {
         didOpen: (document, next) => {

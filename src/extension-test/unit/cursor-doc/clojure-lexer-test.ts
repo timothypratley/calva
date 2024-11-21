@@ -534,6 +534,19 @@ describe('Scanner', () => {
       expect(tokens[4].type).toBe('close');
       expect(tokens[4].raw).toBe('}');
     });
+    it('tokenizes shorthand lambda', () => {
+      const tokens = scanner.processLine('#(foo bar)');
+      expect(tokens[0].type).toBe('open');
+      expect(tokens[0].raw).toBe('#(');
+      expect(tokens[1].type).toBe('id');
+      expect(tokens[1].raw).toBe('foo');
+      expect(tokens[2].type).toBe('ws');
+      expect(tokens[2].raw).toBe(' ');
+      expect(tokens[3].type).toBe('id');
+      expect(tokens[3].raw).toBe('bar');
+      expect(tokens[4].type).toBe('close');
+      expect(tokens[4].raw).toBe(')');
+    });
     it('tokenizes set', () => {
       const tokens = scanner.processLine('#{:foo :bar}');
       expect(tokens[0].type).toBe('open');
@@ -565,12 +578,32 @@ describe('Scanner', () => {
       expect(tokens[2].type).toBe('close');
       expect(tokens[2].raw).toBe('"');
     });
+    it('tokenizes the `#` in `#[]` separately', () => {
+      const tokens = scanner.processLine('#[foo bar]');
+      expect(tokens[0].type).toBe('junk');
+      expect(tokens[0].raw).toBe('#');
+      expect(tokens[1].type).toBe('open');
+      expect(tokens[1].raw).toBe('[');
+      expect(tokens[2].type).toBe('id');
+      expect(tokens[2].raw).toBe('foo');
+      expect(tokens[3].type).toBe('ws');
+      expect(tokens[3].raw).toBe(' ');
+      expect(tokens[4].type).toBe('id');
+      expect(tokens[4].raw).toBe('bar');
+      expect(tokens[5].type).toBe('close');
+      expect(tokens[5].raw).toBe(']');
+    });
   });
   describe('data reader tags', () => {
     it('tokenizes tag, separate line', () => {
       const tokens = scanner.processLine('#foo');
       expect(tokens[0].type).toBe('reader');
       expect(tokens[0].raw).toBe('#foo');
+    });
+    it('tokenizes tag, with underscores', () => {
+      const tokens = scanner.processLine('#foo_bar');
+      expect(tokens[0].type).toBe('reader');
+      expect(tokens[0].raw).toBe('#foo_bar');
     });
     it('does not treat var quote plus open token as reader tag plus open token', () => {
       const tokens = scanner.processLine("#'foo []");

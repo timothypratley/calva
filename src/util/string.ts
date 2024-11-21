@@ -30,10 +30,18 @@ function getTextAfterLastOccurrenceOfSubstring(
 ): string | undefined {
   const indexOfLastPrompt = text.lastIndexOf(substring);
   if (indexOfLastPrompt === -1) {
-    return undefined;
+    return text;
   }
   const indexOfEndOfPrompt = indexOfLastPrompt + substring.length;
   return text.substring(indexOfEndOfPrompt);
+}
+
+export function escapeStringRegexp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function isNonEmptyString(value: any): value is string {
+  return typeof value == 'string' && value.length > 0;
 }
 
 export {
