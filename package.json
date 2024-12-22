@@ -47,6 +47,11 @@
   },
   "badges": [
     {
+      "url": "https://img.shields.io/badge/chat-%23calva-db9550?style=for-the-badge&logo=zulip",
+      "href": "https://clojurians.zulipchat.com/#narrow/channel/151858-calva",
+      "description": "Let's talk in the #calva channel at the Clojurians Slack"
+    },
+    {
       "url": "https://img.shields.io/badge/clojurians-calva--dev-blue.svg?logo=slack",
       "href": "https://clojurians.slack.com/messages/calva/",
       "description": "Let's talk in the #calva channel at the Clojurians Slack"

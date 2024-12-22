@@ -16,7 +16,7 @@ description: Learn how to use Calva, a rich IDE for enjoyable and productive Clo
 
 [Calva](https://marketplace.visualstudio.com/items?itemName=betterthantomorrow.calva) is an integrated, REPL powered, development environment for enjoyable and productive [Clojure](https://clojure.org) and [ClojureScript](https://clojurescript.org) programming in [Visual Studio Code](https://code.visualstudio.com). It is [feature rich](#features) and turnkey. A lot of effort has been put into making Calva a good choice if you are new to Clojure. [Calva is open source](https://github.com/BetterThanTomorrow/calva) and free to use.
 
-[![#calva chat on Zulip](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://clojurians.zulipchat.com/#narrow/channel/151858-calva)
+[![chat - #clojure](https://img.shields.io/badge/chat-%23calva-db9550?style=for-the-badge&logo=zulip)](https://clojurians.zulipchat.com/#narrow/channel/151858-calva)
 
 ## Getting Started
 
