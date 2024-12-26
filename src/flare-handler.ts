@@ -1,13 +1,8 @@
 import * as vscode from 'vscode';
 import * as webview from './webview';
 
-function isFlare(value: any): boolean {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    Object.keys(value).length === 1 &&
-    value.hasOwnProperty('calva/flare')
-  );
+function isFlare(s: string): boolean {
+  return s.startsWith('{:calva/flare ');
 }
 
 function getFlareRequest(flare: Record<string, any>): any {
@@ -38,19 +33,21 @@ type ActRequest = InfoRequest | WarnRequest | ErrorRequest | WebviewRequest | De
 
 const actHandlers: Record<string, (request: ActRequest, EvaluateFunction) => void> = {
   default: (request: DefaultRequest, evaluate: EvaluateFunction) => {
-    vscode.window.showErrorMessage(`Unknown flare request type: ${JSON.stringify(request.type)}`);
+    void vscode.window.showErrorMessage(
+      `Unknown flare request type: ${JSON.stringify(request.type)}`
+    );
   },
   info: ({ message, items = [], then }: InfoRequest, evaluate: EvaluateFunction) => {
     const p = vscode.window.showInformationMessage(message, ...items);
     if (then) {
-      p.then((selected) => evaluate('(resolve ' + then + ' ' + selected + ')', null));
+      void p.then((selected) => evaluate('(resolve ' + then + ' ' + selected + ')', null));
     }
   },
   warn: ({ message, items = [] }: WarnRequest) => {
-    vscode.window.showWarningMessage(message, ...items);
+    void vscode.window.showWarningMessage(message, ...items);
   },
   error: ({ message, items = [] }: ErrorRequest) => {
-    vscode.window.showErrorMessage(message, ...items);
+    void vscode.window.showErrorMessage(message, ...items);
   },
   webview: (request: WebviewRequest) => {
     webview.show(request);
