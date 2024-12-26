@@ -1,14 +1,6 @@
 import * as vscode from 'vscode';
 import * as webview from './webview';
-import * as jsedn from 'jsedn';
-
-function isFlare(x: any): boolean {
-  return typeof x === 'object' && x !== null && 'calva/flare' in x;
-}
-
-function getFlareRequest(flare: Record<string, any>): any {
-  return Object.values(flare)[0];
-}
+import { parseEdn } from '../out/cljs-lib/cljs-lib';
 
 type EvaluateFunction = (
   code: string,
@@ -60,15 +52,31 @@ function act(request: ActRequest, evaluate: EvaluateFunction): void {
   handler(request, evaluate);
 }
 
+function isFlare(x: any): boolean {
+  return typeof x === 'object' && x !== null && 'calva/flare' in x;
+}
+
+function getFlareRequest(flare: Record<string, any>): any {
+  return Object.values(flare)[0];
+}
+
 export function inspect(edn: string, evaluate: EvaluateFunction): any {
   console.log('INSPECT', edn);
-  if (edn) {
-    const x = jsedn.parse(edn);
-    console.log('PARSED', x);
-    if (isFlare(x)) {
-      console.log('FLARE');
-      act(getFlareRequest(x), evaluate);
+  if (
+    edn &&
+    typeof edn === 'string' &&
+    (edn.startsWith('{:calva/flare') || edn.startsWith('#:calva{:flare'))
+  ) {
+    try {
+      const x = parseEdn(edn);
+      console.log('PARSED', x);
+      if (isFlare(x)) {
+        console.log('FLARE');
+        act(getFlareRequest(x), evaluate);
+      }
+      return x;
+    } catch (e) {
+      console.log('ERROR: jsedn.parse failed: ' + e);
     }
-    return x;
   }
 }
