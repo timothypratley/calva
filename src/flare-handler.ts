@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import * as webview from './webview';
+import * as jsedn from 'jsedn';
 
-function isFlare(s: string): boolean {
-  return s.startsWith('{:calva/flare ');
+function isFlare(x: any): boolean {
+  return typeof x === 'object' && x !== null && 'calva/flare' in x;
 }
 
 function getFlareRequest(flare: Record<string, any>): any {
@@ -59,10 +60,15 @@ function act(request: ActRequest, evaluate: EvaluateFunction): void {
   handler(request, evaluate);
 }
 
-export function inspect(x: any, evaluate: EvaluateFunction): any {
-  if (isFlare(x)) {
-    console.log('FLARE');
-    act(getFlareRequest(x), evaluate);
+export function inspect(edn: string, evaluate: EvaluateFunction): any {
+  console.log('INSPECT', edn);
+  if (edn) {
+    const x = jsedn.parse(edn);
+    console.log('PARSED', x);
+    if (isFlare(x)) {
+      console.log('FLARE');
+      act(getFlareRequest(x), evaluate);
+    }
+    return x;
   }
-  return x;
 }
