@@ -1,11 +1,6 @@
 import * as vscode from 'vscode';
 import * as webview from './webview';
 
-let evalFn: (code: any) => void;
-export function setEvalFn(fn: typeof evalFn) {
-  evalFn = fn;
-}
-
 function isFlare(value: any): boolean {
   return (
     typeof value === 'object' &&
@@ -19,6 +14,12 @@ function getFlareRequest(flare: Record<string, any>): any {
   return Object.values(flare)[0];
 }
 
+type EvaluateFunction = (
+  code: string,
+  options: any,
+  selection?: vscode.Selection
+) => Promise<string | null>;
+
 type InfoRequest = { type: 'info'; message: string; items?: string[]; then?: any };
 type WarnRequest = { type: 'warn'; message: string; items?: string[] };
 type ErrorRequest = { type: 'error'; message: string; items?: string[] };
@@ -27,16 +28,14 @@ type DefaultRequest = { type: 'default'; [key: string]: any };
 
 type ActRequest = InfoRequest | WarnRequest | ErrorRequest | WebviewRequest | DefaultRequest;
 
-const actHandlers: Record<string, (request: ActRequest) => void> = {
-  default: (request: DefaultRequest) => {
+const actHandlers: Record<string, (request: ActRequest, EvaluateFunction) => void> = {
+  default: (request: DefaultRequest, evaluate: EvaluateFunction) => {
     vscode.window.showErrorMessage(`Unknown flare request type: ${JSON.stringify(request.type)}`);
   },
-  info: ({ message, items = [], then }: InfoRequest) => {
+  info: ({ message, items = [], then }: InfoRequest, evaluate: EvaluateFunction) => {
     const p = vscode.window.showInformationMessage(message, ...items);
     if (then) {
-      p.then((selected) => {
-        evalFn?.([['resolve', then], selected]);
-      });
+      p.then((selected) => evaluate("(resolve " + then + " " + selected + ")", null));
     }
   },
   warn: ({ message, items = [] }: WarnRequest) => {
@@ -50,15 +49,15 @@ const actHandlers: Record<string, (request: ActRequest) => void> = {
   }
 };
 
-function act(request: ActRequest): void {
+function act(request: ActRequest, evaluate: EvaluateFunction): void {
   const handler = actHandlers[request.type] || actHandlers.default;
-  handler(request);
+  handler(request, evaluate);
 }
 
-export function inspect(x: any): any {
+export function inspect(x: any, evaluate: EvaluateFunction): any {
   if (isFlare(x)) {
     console.log('FLARE');
-    act(getFlareRequest(x));
+    act(getFlareRequest(x), evaluate);
   }
   return x;
 }

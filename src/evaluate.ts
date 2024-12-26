@@ -140,7 +140,7 @@ async function evaluateCodeUpdatingUI(
 
       result = value;
 
-      flareHandler.inspect(value);
+      flareHandler.inspect(value, evaluateCodeUpdatingUI);
 
       if (showResult) {
         inspectorDataProvider.addItem(value, false, `[${session.replType}] ${ns}`);
