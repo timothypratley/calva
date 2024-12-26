@@ -735,10 +735,6 @@ async function evaluateInOutputWindow(code: string, sessionType: string, ns: str
   }
 }
 
-function inspect(value){
-
-}
-
 export default {
   interruptAllEvaluations,
   loadDocument,
