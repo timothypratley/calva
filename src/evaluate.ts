@@ -19,6 +19,7 @@ import * as output from './results-output/output';
 import * as inspector from './providers/inspector';
 import { resultAsComment } from './util/string-result';
 import { highlight } from './highlight/src/extension';
+import * as flareHandler from './flare-handler';
 
 let inspectorDataProvider: inspector.InspectorDataProvider;
 
@@ -138,6 +139,8 @@ async function evaluateCodeUpdatingUI(
       value = util.stripAnsi(context.pprintOut || value);
 
       result = value;
+
+      flareHandler.inspect(value);
 
       if (showResult) {
         inspectorDataProvider.addItem(value, false, `[${session.replType}] ${ns}`);
@@ -730,6 +733,10 @@ async function evaluateInOutputWindow(code: string, sessionType: string, ns: str
   } catch (e) {
     output.appendLineOtherErr('Evaluation failed.');
   }
+}
+
+function inspect(value){
+
 }
 
 export default {
