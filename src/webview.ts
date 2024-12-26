@@ -1,20 +1,12 @@
 import * as vscode from 'vscode';
 
 const defaultOpts = {
-  enableScripts: true
+  enableScripts: true,
 };
 
-function insertPanel(state: { webviews: Record<string, vscode.WebviewPanel> }, key: string, panel: vscode.WebviewPanel): void {
-  state.webviews[key] = panel;
-}
-
-function deleteWebviewPanel(state: { webviews: Record<string, vscode.WebviewPanel> }, key: string): void {
-  delete state.webviews[key];
-}
-
-function selectWebviewPanel(state: { webviews: Record<string, vscode.WebviewPanel> }, key: string): vscode.WebviewPanel | undefined {
-  return state.webviews[key];
-}
+// keep track of open webviews that have a key,
+// so that they can be updated
+const webviewRegistry: Record<string, vscode.WebviewPanel> = {};
 
 function setHtml(panel: vscode.WebviewPanel, title: string, html: string): vscode.WebviewPanel {
   if (panel.title !== title) {
@@ -47,12 +39,12 @@ function urlInIframe(uri: string): string {
 }
 
 export function show({
-  title = "Webview",
+  title = 'Webview',
   html,
   url,
   key,
   column = vscode.ViewColumn.Beside,
-  opts = defaultOpts
+  opts = defaultOpts,
 }: {
   title?: string;
   html?: string;
@@ -62,20 +54,19 @@ export function show({
   opts?: typeof defaultOpts;
 }): vscode.WebviewPanel {
   const finalHtml = url ? urlInIframe(url) : html || '';
-  const appState = db.getAppState();
   if (key) {
-    const existingPanel = selectWebviewPanel(appState, key);
+    const existingPanel = webviewRegistry[key];
     if (existingPanel) {
       return setHtml(existingPanel, title, finalHtml);
     }
   }
 
-  const panel = vscode.window.createWebviewPanel("calva-webview", title, column, opts);
+  const panel = vscode.window.createWebviewPanel('calva-webview', title, column, opts);
   setHtml(panel, title, finalHtml);
 
   if (key) {
-    insertPanel(appState, key, panel);
-    panel.onDidDispose(() => deleteWebviewPanel(appState, key));
+    webviewRegistry[key] = panel;
+    panel.onDidDispose(() => delete webviewRegistry[key]);
   }
 
   return panel;

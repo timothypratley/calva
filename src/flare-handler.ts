@@ -23,7 +23,15 @@ type EvaluateFunction = (
 type InfoRequest = { type: 'info'; message: string; items?: string[]; then?: any };
 type WarnRequest = { type: 'warn'; message: string; items?: string[] };
 type ErrorRequest = { type: 'error'; message: string; items?: string[] };
-type WebviewRequest = { type: 'webview'; title?: string; html?: string; url?: string; key?: string; column?: vscode.ViewColumn; opts?: any};
+type WebviewRequest = {
+  type: 'webview';
+  title?: string;
+  html?: string;
+  url?: string;
+  key?: string;
+  column?: vscode.ViewColumn;
+  opts?: any;
+};
 type DefaultRequest = { type: 'default'; [key: string]: any };
 
 type ActRequest = InfoRequest | WarnRequest | ErrorRequest | WebviewRequest | DefaultRequest;
@@ -35,7 +43,7 @@ const actHandlers: Record<string, (request: ActRequest, EvaluateFunction) => voi
   info: ({ message, items = [], then }: InfoRequest, evaluate: EvaluateFunction) => {
     const p = vscode.window.showInformationMessage(message, ...items);
     if (then) {
-      p.then((selected) => evaluate("(resolve " + then + " " + selected + ")", null));
+      p.then((selected) => evaluate('(resolve ' + then + ' ' + selected + ')', null));
     }
   },
   warn: ({ message, items = [] }: WarnRequest) => {
@@ -46,7 +54,7 @@ const actHandlers: Record<string, (request: ActRequest, EvaluateFunction) => voi
   },
   webview: (request: WebviewRequest) => {
     webview.show(request);
-  }
+  },
 };
 
 function act(request: ActRequest, evaluate: EvaluateFunction): void {
