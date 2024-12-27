@@ -71,3 +71,5 @@ export function show({
 
   return panel;
 }
+
+// TODO: register a command for creating a webview, because why not?
