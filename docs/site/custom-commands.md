@@ -23,6 +23,7 @@ The `calva.customREPLCommandSnippets` is an array of objects with the following 
 * `ns`: A namespace to evaluate the command in. If omitted the command will be executed in the namespace of the current editor.
 * `repl`: Which repl session to use for the evaluation. Either `"clj"` or `"cljs"`. Omit if you want to use the session of the current editor.
 * `evaluationSendCodeToOutputWindow`: (default `true`) Whether the evaluated code should be echoed to the Output/REPL window.
+* `command`: (optional) A VS Code command to invoke after the snippet completes, providing the snippet's result as arguments. Supply and empty array `[]` if the result should include the command itself.
 
 There are also substitutions available, which will take elements from the current state of Calva and splice them in to the text of your command before executing it. They are
 
@@ -86,7 +87,6 @@ And these **Workspace** settings:
             "snippet": "(start)"
         }
     ],
-
 ```
 
 Issuing **Run Custom REPL Command** will then render a VS Code menu with all the commands, where the Workspace configured commands will be listed first.
@@ -170,3 +170,23 @@ A new experimental feature lets library authors ship snippets inside their jar f
   {:name "edn hover show val"
    :snippet (str "### EDN show val\n```clojure\n" (pr-str (eval (symbol (str "$ns" "/" "$hover-top-level-defined-symbol")))) "\n```")}]}
 ```
+
+## Running a command as the result of evaluation
+
+Supplying a `command` will cause the result of evaluation to be treated as a command.
+`command` is an array signature of the command.
+If empty then the result will be treated as the command.
+If supplied then the result will be treated as additional arguments.
+
+```json
+        {
+            "name": "Eval Current Form as Command",
+            "key": "a",
+            "repl": "clj",
+            "snippet": "$current-form",
+            "command": []
+        },
+```
+
+It's useful to know that there is a "runCommands" command,
+so you can also chain multiple command/snippets together.

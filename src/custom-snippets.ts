@@ -8,27 +8,32 @@ import { getConfig } from './config';
 import * as replSession from './nrepl/repl-session';
 import evaluate from './evaluate';
 import * as state from './state';
-import { getStateValue } from '../out/cljs-lib/cljs-lib';
+import { getStateValue, parseEdn } from '../out/cljs-lib/cljs-lib';
 import * as output from './results-output/output';
 
+// the structure of custom REPL command snippets as configured by the user
 export type CustomREPLCommandSnippet = {
   name: string;
   key?: string;
   snippet: string;
   repl?: string;
   ns?: string;
+  command?: string | string[];
 };
 
+// a snippet that is ready to be evaluated, with additional fields for internal use
 type SnippetDefinition = {
   snippet: string;
   ns: string;
   repl: string;
   evaluationSendCodeToOutputWindow?: boolean;
+  command?: string | string[];
 };
 
 export function evaluateCustomCodeSnippetCommand(codeOrKeyOrSnippet?: string | SnippetDefinition) {
   evaluateCodeOrKeyOrSnippet(codeOrKeyOrSnippet).catch((err) => {
     console.log('Failed to run snippet', err);
+    void vscode.window.showErrorMessage(`Failed to run snippet: ${err.message}`);
   });
 }
 
@@ -68,7 +73,33 @@ async function evaluateCodeOrKeyOrSnippet(codeOrKeyOrSnippet?: string | SnippetD
       : undefined;
 
   const context = makeContext(editor, snippetDefinition.ns, editorNS, snippetDefinition.repl);
-  await evaluateCodeInContext(editor, snippetDefinition.snippet, context, options);
+  const result = await evaluateCodeInContext(editor, snippetDefinition.snippet, context, options);
+
+  if (snippetDefinition.command && typeof result === 'string') {
+    // the result of evaluation goes into the command array
+    const value = parseEdn(result);
+    const args = decodeArguments(value);
+    let commandArray: any[];
+
+    // make sure the command is an array
+    if (Array.isArray(snippetDefinition.command)) {
+      commandArray = [...snippetDefinition.command];
+    } else {
+      commandArray = [snippetDefinition.command];
+    }
+
+    // append the results of evaluation
+    if (Array.isArray(args)) {
+      commandArray = [...commandArray, ...args];
+    } else {
+      commandArray.push(args);
+    }
+
+    // run the command
+    await vscode.commands.executeCommand(commandArray[0], ...commandArray.slice(1));
+  }
+
+  return result;
 }
 
 async function evaluateCodeInContext(
@@ -112,6 +143,7 @@ async function getSnippetDefinition(codeOrKey: string, editorNS: string, editorR
       detail: `${entry.snippet}`,
       description: `${entry.repl}`,
       snippet: entry.snippet,
+      command: entry.command,
     };
     snippetsMenuItems.push(item);
     if (!snippetsDict[entry.key]) {
@@ -228,4 +260,62 @@ function interpolateCode(editor: vscode.TextEditor, code: string, context): stri
       .replace(/\$hover-head/g, context.hoverhead?.[1] ?? '')
       .replace(/\$hover-tail/g, context.hovertail?.[1] ?? '');
   }
+}
+
+function resolveRelativePath(path: string): string {
+  if (path.startsWith('/')) {
+    return path;
+  }
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (workspaceFolders && workspaceFolders.length > 0) {
+    const workspacePath = workspaceFolders[0].uri.fsPath;
+    return vscode.Uri.file(`${workspacePath}/${path}`).fsPath;
+  }
+  return path;
+}
+
+function resolveFilePath(path: string): vscode.Uri {
+  return vscode.Uri.file(resolveRelativePath(path));
+}
+
+const decoders = {
+  File: resolveFilePath,
+  Uri: vscode.Uri.parse,
+};
+
+function decodeArgument(arg: any): any {
+  if (Array.isArray(arg) && arg.length > 1) {
+    if (decoders[arg[0]]) {
+      const Decoder = decoders[arg[0]];
+      const decodedArgs = arg.slice(1).map(decodeArgument);
+      return Decoder(...decodedArgs);
+    }
+
+    const parts = arg[0].split('.');
+    if (parts.length > 0) {
+      let vscodeType: any = vscode;
+      for (const part of parts) {
+        vscodeType = vscodeType[part];
+        if (!vscodeType) {
+          break;
+        }
+      }
+      if (typeof vscodeType === 'function') {
+        const decodedArgs = arg.slice(1).map(decodeArgument);
+        if (vscodeType.prototype) {
+          return new vscodeType(...decodedArgs);
+        } else {
+          return vscodeType(...decodedArgs);
+        }
+      }
+    }
+  }
+  return arg;
+}
+
+function decodeArguments(value: any): any[] {
+  if (Array.isArray(value)) {
+    return value.map(decodeArgument);
+  }
+  return [decodeArgument(value)];
 }
