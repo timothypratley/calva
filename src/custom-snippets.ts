@@ -56,7 +56,7 @@ async function evaluateCodeOrKeyOrSnippet(codeOrKeyOrSnippet?: string | SnippetD
       ? codeOrKeyOrSnippet
       : await getSnippetDefinition(codeOrKeyOrSnippet as string, editorNS, editorRepl);
 
-  snippetDefinition.repl = snippetDefinition.repl ?? editorRepl;
+  snippetDefinition.repl = snippetDefinition.repl ?? editorRepl ?? 'clj';
   snippetDefinition.ns =
     snippetDefinition.ns ?? (editorRepl === snippetDefinition.repl ? editorNS : undefined);
   snippetDefinition.evaluationSendCodeToOutputWindow =

@@ -161,6 +161,17 @@ watcher.onDidChange((uri: vscode.Uri) => {
   void updateCalvaConfigFromEdn(uri);
 });
 
+const exportsWatcher = vscode.workspace.createFileSystemWatcher(
+  '**/resources/calva.exports/config.edn',
+  false,
+  false,
+  false
+);
+
+exportsWatcher.onDidChange((uri: vscode.Uri) => {
+  void updateCalvaConfigFromEdn(uri);
+});
+
 // TODO find a way to validate the configs
 function getConfig() {
   const configOptions = vscode.workspace.getConfiguration('calva');

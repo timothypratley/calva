@@ -53,6 +53,15 @@ async function readRuntimeConfigs() {
       if (element.endsWith('.jar')) {
         const edn = await getJarContents(element.concat('!/calva.exports/config.edn'));
         return [element, edn];
+      } else if (element.endsWith('/resources')) {
+        const configUri = vscode.Uri.file(element.concat('/calva.exports/config.edn'));
+        try {
+          await vscode.workspace.fs.stat(configUri);
+          const edn = await vscode.workspace.fs.readFile(configUri);
+          return [element, edn];
+        } catch {
+          // no config found
+        }
       }
 
       return [element, null];
