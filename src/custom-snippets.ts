@@ -18,7 +18,8 @@ export type CustomREPLCommandSnippet = {
   snippet: string;
   repl?: string;
   ns?: string;
-  command?: string | string[];
+  resultIsCommand?: boolean;
+  commandThen?: string;
 };
 
 // a snippet that is ready to be evaluated, with additional fields for internal use
@@ -27,7 +28,8 @@ type SnippetDefinition = {
   ns: string;
   repl: string;
   evaluationSendCodeToOutputWindow?: boolean;
-  command?: string | string[];
+  resultIsCommand?: boolean;
+  commandThen?: string;
 };
 
 export function evaluateCustomCodeSnippetCommand(codeOrKeyOrSnippet?: string | SnippetDefinition) {
@@ -56,7 +58,12 @@ async function evaluateCodeOrKeyOrSnippet(codeOrKeyOrSnippet?: string | SnippetD
       ? codeOrKeyOrSnippet
       : await getSnippetDefinition(codeOrKeyOrSnippet as string, editorNS, editorRepl);
 
-  snippetDefinition.repl = snippetDefinition.repl ?? editorRepl ?? 'clj';
+  if (!snippetDefinition) {
+    // user pressed ESC, not picking one
+    return undefined;
+  }
+
+  snippetDefinition.repl = snippetDefinition.repl ?? editorRepl;
   snippetDefinition.ns =
     snippetDefinition.ns ?? (editorRepl === snippetDefinition.repl ? editorNS : undefined);
   snippetDefinition.evaluationSendCodeToOutputWindow =
@@ -75,28 +82,21 @@ async function evaluateCodeOrKeyOrSnippet(codeOrKeyOrSnippet?: string | SnippetD
   const context = makeContext(editor, snippetDefinition.ns, editorNS, snippetDefinition.repl);
   const result = await evaluateCodeInContext(editor, snippetDefinition.snippet, context, options);
 
-  if (snippetDefinition.command && typeof result === 'string') {
-    // the result of evaluation goes into the command array
+  if (typeof result === 'string' && snippetDefinition.resultIsCommand) {
     const value = parseEdn(result);
-    const args = decodeArguments(value);
-    let commandArray: any[];
-
-    // make sure the command is an array
-    if (Array.isArray(snippetDefinition.command)) {
-      commandArray = [...snippetDefinition.command];
+    if (!Array.isArray(value) || !value[0]) {
+      void vscode.window.showErrorMessage('Result is not a command array');
+      return result;
     } else {
-      commandArray = [snippetDefinition.command];
+      const command = value[0];
+      const args = value.slice(1).map(decodeArgument);
+      const commandResult = await vscode.commands.executeCommand(command, ...args);
+      if (snippetDefinition.commandThen) {
+        const code = `(${snippetDefinition.commandThen} ${commandResult})`;
+        return await evaluateCodeInContext(editor, code, context, options);
+      }
+      return commandResult;
     }
-
-    // append the results of evaluation
-    if (Array.isArray(args)) {
-      commandArray = [...commandArray, ...args];
-    } else {
-      commandArray.push(args);
-    }
-
-    // run the command
-    await vscode.commands.executeCommand(commandArray[0], ...commandArray.slice(1));
   }
 
   return result;
@@ -143,7 +143,8 @@ async function getSnippetDefinition(codeOrKey: string, editorNS: string, editorR
       detail: `${entry.snippet}`,
       description: `${entry.repl}`,
       snippet: entry.snippet,
-      command: entry.command,
+      resultIsCommand: entry.resultIsCommand,
+      commandThen: entry.commandThen,
     };
     snippetsMenuItems.push(item);
     if (!snippetsDict[entry.key]) {
@@ -311,11 +312,4 @@ function decodeArgument(arg: any): any {
     }
   }
   return arg;
-}
-
-function decodeArguments(value: any): any[] {
-  if (Array.isArray(value)) {
-    return value.map(decodeArgument);
-  }
-  return [decodeArgument(value)];
 }

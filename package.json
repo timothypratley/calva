@@ -2168,6 +2168,31 @@
         "category": "Calva",
         "command": "calva.revealInspector",
         "title": "Reveal Inspector"
+      },
+      {
+        "category": "Calva",
+        "command": "calva.revealJackInTerminal",
+        "title": "Reveal Jack-In Terminal"
+      },
+      {
+        "category": "Calva",
+        "command": "calva.info",
+        "title": "Show Information Message"
+      },
+      {
+        "category": "Calva",
+        "command": "calva.warn",
+        "title": "Show Warning Message"
+      },
+      {
+        "category": "Calva",
+        "command": "calva.error",
+        "title": "Show Error Message"
+      },
+      {
+        "category": "Calva",
+        "command": "calva.webview",
+        "title": "Show Webview"
       }
     ],
     "keybindings": [

@@ -57,13 +57,13 @@ async function readRuntimeConfigs() {
         const configUri = vscode.Uri.file(element.concat('/calva.exports/config.edn'));
         try {
           await vscode.workspace.fs.stat(configUri);
-          const edn = await vscode.workspace.fs.readFile(configUri);
+          const ednBytes = await vscode.workspace.fs.readFile(configUri);
+          const edn = new TextDecoder('utf-8').decode(ednBytes);
           return [element, edn];
         } catch {
           // no config found
         }
       }
-
       return [element, null];
     });
     const files = await Promise.all(configs);
