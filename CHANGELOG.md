@@ -4,9 +4,11 @@ Changes to Calva.
 
 ## [Unreleased]
 
+- [Added resultAsCommand and commandThen options for custom snippets](https://github.com/BetterThanTomorrow/calva/issues/2683)
+
 ## [2.0.482] - 2024-12-03
 
-- Fix: [Added 'replace-refer-all-with-alias' & 'replace-refer-all-with-refer' actions to calva.](https://github.com/BetterThanTomorrow/calva/issues/2667) 
+- Fix: [Added 'replace-refer-all-with-alias' & 'replace-refer-all-with-refer' actions to calva.](https://github.com/BetterThanTomorrow/calva/issues/2667)
 
 ## [2.0.481] - 2024-10-29
 
