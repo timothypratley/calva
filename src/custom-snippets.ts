@@ -23,7 +23,7 @@ export type CustomREPLCommandSnippet = {
 };
 
 // a snippet that is ready to be evaluated, with additional fields for internal use
-type SnippetDefinition = {
+export type SnippetDefinition = {
   snippet: string;
   ns: string;
   repl: string;
