@@ -108,6 +108,7 @@ nav:
   - API:
     - api.md
     - commands.md
+    - commands-reference.md
   - Guides:
     - get-started-with-clojure.md
     - jack-in-guide.md

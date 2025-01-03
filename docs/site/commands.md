@@ -5,9 +5,6 @@ description: A list of all (well, not by far yet) Calva commands. A part of Calv
 
 # Calva Commands
 
-!!! Note "This list is totally incomplete"
-    If you want to help the Calva project, one way to do so is to help making this list of commands complete.
-
 Calva's commands are part of the [Calva API](api.md). They often accept arguments of some type, which you can use from keybindings and from [Joyride](https://github.com/BetterThanTomorrow/joyride) (or another VS Code extension). Well behaved commands return a Promise, if it is async. You can utilize this with Joyride too, or with keybindings involving [`runCommands`](https://blog.agical.se/en/posts/vs-code-runcommands-for-multi-commands-keyboard-shortcuts/).
 
 ## Example shortcut bindings
@@ -44,16 +41,14 @@ Here's another way to achieve something similar.
   }
 ```
 
-## REPL commands
-
-Commands that establishes or needs a REPL connection.
+## Commands with arguments
 
 | Command | Title | Arguments | Notes |
 | :------ | :---- | :-------- | :---- |
 | `calva.refresh` | Refreshes changed namespaces | A JSON object with stuff from [cider-nrepl ops/refresh](https://github.com/clojure-emacs/cider-nrepl/blob/master/doc/modules/ROOT/pages/nrepl-api/ops.adoc#refresh) | Mostly meant for sending `:dirs`, `:after`, and `:before`. The print options may or may not work.
 | `calva.refreshAll` | Refreshes changed namespaces | A JSON object with stuff from [cider-nrepl ops/refresh-aa](https://github.com/clojure-emacs/cider-nrepl/blob/master/doc/modules/ROOT/pages/nrepl-api/ops.adoc#refresh-all) | Mostly meant for sending `:dirs`, `:after`, and `:before`. The print options may or may not work.
 
+Unfortunatley the arguments are not well documented, so you may need to poke around in the code to discover them.
+If you search for the command, you should find it in package.json, and be able to navigate to the function definition to see the arguments.
 
-## Wait, where are all the commands?
-
-Told you the list is incomplete... Please consider helping with making this a complete list! 🙏
+See [Commands Reference](commands-reference.md) for the complete list of commands available.
