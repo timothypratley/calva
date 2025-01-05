@@ -60,7 +60,7 @@ commands.forEach((c) => {
 });
 
 const generateSection = (title, commands) => {
-  return `## ${title} commands
+  return `## ${title}
 
 | Command | Title |
 | :------ | :---- |

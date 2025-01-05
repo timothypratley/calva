@@ -8,7 +8,7 @@ description: All Calva commands.
 Calva's commands are part of the [Calva API](api.md).
 They often accept arguments of some type.
 
-## JackIn commands
+## JackIn
 
 | Command | Title |
 | :------ | :---- |
@@ -22,7 +22,7 @@ They often accept arguments of some type.
 | `calva.startStandaloneHelloRepl` | Create a Getting Started REPL project |
 | `calva.revealJackInTerminal` | Reveal Jack-In Terminal |
 
-## Evaluate commands
+## Evaluate
 
 | Command | Title |
 | :------ | :---- |
@@ -45,7 +45,7 @@ They often accept arguments of some type.
 | `calva.refreshAll` | Refresh All Namespaces |
 | `calva.evaluateFiddleForSourceFile` | Evaluate Fiddle File for Current File |
 
-## Test commands
+## Test
 
 | Command | Title |
 | :------ | :---- |
@@ -57,7 +57,7 @@ They often accept arguments of some type.
 | `calva.runTestUnderCursor` | Run Current Test |
 | `calva.toggleBetweenImplAndTest` | Toggle between implementation and test |
 
-## Paredit commands
+## Paredit
 
 | Command | Title |
 | :------ | :---- |
@@ -124,7 +124,7 @@ They often accept arguments of some type.
 | `paredit.rewrapQuote` | Rewrap "" |
 | `paredit.addRichComment` | Add Rich Comment |
 
-## LSP commands
+## LSP
 
 | Command | Title |
 | :------ | :---- |
@@ -154,7 +154,7 @@ They often accept arguments of some type.
 | `clojureLsp.refactor.extractFunction` | Extract to New Function |
 | `calva.diagnostics.clojureLspServerInfo` | Clojure-lsp Server Info |
 
-## Formatting commands
+## Formatting
 
 | Command | Title |
 | :------ | :---- |
@@ -165,7 +165,7 @@ They often accept arguments of some type.
 | `calva-fmt.tabIndent` | Indent Line |
 | `calva-fmt.tabDedent` | Dedent Line |
 
-## Conversion commands
+## Conversion
 
 | Command | Title |
 | :------ | :---- |
@@ -175,7 +175,7 @@ They often accept arguments of some type.
 | `calva.pasteHtmlAsHiccup` | Paste HTML code as Hiccup |
 | `calva.copyHtmlAsHiccup` | Copy HTML code as Hiccup |
 
-## Inspector commands
+## Inspector
 
 | Command | Title |
 | :------ | :---- |
@@ -187,7 +187,7 @@ They often accept arguments of some type.
 | `calva.addToInspector` | Add Selection or Current Form to Inspector |
 | `calva.revealInspector` | Reveal Inspector |
 
-## Show commands
+## Show
 
 | Command | Title |
 | :------ | :---- |
@@ -196,7 +196,7 @@ They often accept arguments of some type.
 | `calva.error` | Show Error Message |
 | `calva.webview` | Show Webview |
 
-## REPL commands
+## REPL
 
 | Command | Title |
 | :------ | :---- |
@@ -223,7 +223,7 @@ They often accept arguments of some type.
 | `calva.showNextReplHistoryEntry` | Show Next REPL History Entry |
 | `calva.clearReplHistory` | Clear REPL History |
 
-## Miscellaneous commands
+## Miscellaneous
 
 | Command | Title |
 | :------ | :---- |
