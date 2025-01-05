@@ -45,7 +45,6 @@ import * as lsp from './lsp';
 import * as fiddleFiles from './fiddle-files';
 import * as output from './results-output/output';
 import * as inspector from './providers/inspector';
-import * as webview from './webview';
 
 function onDidChangeEditorOrSelection(editor: vscode.TextEditor) {
   replHistory.setReplHistoryCommandsActiveContext(editor);
@@ -373,7 +372,7 @@ async function activate(context: vscode.ExtensionContext) {
     info: vscode.window.showInformationMessage,
     warn: vscode.window.showWarningMessage,
     error: vscode.window.showErrorMessage,
-    webview: webview.show,
+    webview: snippets.show,
   };
 
   function registerCalvaCommand([command, callback]) {
